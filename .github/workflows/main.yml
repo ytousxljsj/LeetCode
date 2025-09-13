@@ -1,0 +1,30 @@
+# .github/workflows/deploy.yml
+name: Deploy to GitHub Pages
+on:
+  push:
+    branches: [main]          # 每次推 main 就触发
+  workflow_dispatch:          # 也可以手动点运行
+permissions:
+  contents: read
+  pages: write      # 允许写 Pages
+  id-token: write   # 允许拿部署令牌
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: 20}
+      - run: npm i           # 安装你生成静态站需要的依赖
+      - run: npm run build   # 生成 dist / public / build 目录
+      - uses: actions/upload-pages-artifact@v3
+        with: {path: ./dist} # 把你的产物目录写这里
+  deploy:
+    needs: build
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/deploy-pages@v4
+        id: deployment
